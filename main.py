@@ -4,7 +4,7 @@ import sys
 #GLOBAL VARIABLES
 
 #In miliseconds
-defaultDelay = 10 
+defaultDelay = 0.1
 duckyCommands = {
     "WINDOWS": "Keycode.WINDOWS", "GUI": "Keycode.GUI",
     "APP": "Keycode.APPLICATION", "MENU": "Keycode.APPLICATION", "SHIFT": "Keycode.SHIFT",
@@ -51,6 +51,15 @@ def addImports(file):
     "layout = KeyboardLayout(keyboard)\n"
     )
     file.write(imports)
+
+def editText(text):
+    newText = ""
+    for char in text:
+        if char == "\"" or char == "\'" or char == "\\":
+            newText += "\\"
+        newText += char
+    return newText
+
 def addScriptLine(file, line):
     file.write("\n# Script line\n")
     for key in filter(None, line.split(" ")):
@@ -59,9 +68,6 @@ def addScriptLine(file, line):
         # If command key is found
         if command_keycode is not None:
             file.write(f"keyboard.press({command_keycode})\n")
-        # If command is keycode attribute
-        elif hasattr(Keycode, key):
-            file.write(f"keyboard.press({getattr(Keycode, key)})\n")
         else:
             unknow_key = f"Unknown key: <{key}>"
             file.write(f"# {unknow_key}\n")
@@ -69,24 +75,37 @@ def addScriptLine(file, line):
     file.write("keyboard.release_all()\n\n")
 
 def processLine(file, line):
-    if (line[0:3] == "REM"):
-        pass
+    global defaultDelay
+
+    if (line[0:3] == "REM" or line == ""):
+        return
     elif (line[0:5] == "DELAY"):
         file.write(f"sleep({float(line[6:])/1000})\n")
     elif(line[0:6] == "STRING"):
-        file.write(f"layout.write(\"{line[7:]}\")\n")
+        text = editText(line[7:])
+        file.write(f"layout.write(\"{text}\")\n")
     elif(line[0:5] == "PRINT"):
         file.write("print(\"[SCRIPT]: \" + line[6:])\n")
     elif(line[0:6] == "IMPORT"):
         convertScript(line[7:])
     elif(line[0:12] == "DEFAULTDELAY"):
-        defaultDelay = int(line[13:])
+        defaultDelay = float(line[13:])/1000
+        # Just to not add delay, because this command is script creator specific
+        return
     else:
         addScriptLine(file, line)
+    file.write(f"sleep({defaultDelay})\n")
+
 def convertScript(inFile, outFile):
     while (line := inFile.readline()):
         line = line.rstrip()
-        processLine(outFile, line)
+        if(line[0:6] == "REPEAT"):
+            for i in range(int(line[7:])):
+                #repeat the last command
+                processLine(outFile, previous_line)
+        else:
+            processLine(outFile, line)
+            previousLine = line
 
 def main():
     inFilePath = getDuckyFile()
