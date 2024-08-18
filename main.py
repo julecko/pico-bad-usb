@@ -1,7 +1,10 @@
 import argparse
+import sys
 
 #GLOBAL VARIABLES
-defaultDelay
+
+#In miliseconds
+defaultDelay = 10 
 duckyCommands = {
     "WINDOWS": "Keycode.WINDOWS", "GUI": "Keycode.GUI",
     "APP": "Keycode.APPLICATION", "MENU": "Keycode.APPLICATION", "SHIFT": "Keycode.SHIFT",
@@ -41,35 +44,58 @@ def addImports(file):
     "from adafruit_hid.keyboard import Keyboard\n"
     "from adafruit_hid.keycode import Keycode\n"
     "from time import sleep\n"
+    "from adafruit_hid.keyboard_layout_us import KeyboardLayoutUS as KeyboardLayout\n"
+    "\n"
+    "\n"
+    "keyboard = Keyboard(usb_hid.devices)\n"
+    "layout = KeyboardLayout(keyboard)\n"
     )
     file.write(imports)
-def addScriptLine(line):
-    ...
-def typeString(text):
-    ...
+def addScriptLine(file, line):
+    file.write("\n# Script line\n")
+    for key in filter(None, line.split(" ")):
+        key = key.upper()
+        command_keycode = duckyCommands.get(key, None)
+        # If command key is found
+        if command_keycode is not None:
+            file.write(f"keyboard.press({command_keycode})\n")
+        # If command is keycode attribute
+        elif hasattr(Keycode, key):
+            file.write(f"keyboard.press({getattr(Keycode, key)})\n")
+        else:
+            unknow_key = f"Unknown key: <{key}>"
+            file.write(f"# {unknow_key}\n")
+            print(unknow_key, sys.stderr)
+    file.write("keyboard.release_all()\n\n")
+
 def processLine(file, line):
     if (line[0:3] == "REM"):
         pass
     elif (line[0:5] == "DELAY"):
         file.write(f"sleep({float(line[6:])/1000})\n")
     elif(line[0:6] == "STRING"):
-        typeString(line[7:])
+        file.write(f"layout.write(\"{line[7:]}\")\n")
     elif(line[0:5] == "PRINT"):
-        file.write("print(\"[SCRIPT]: \" + line[6:])")
+        file.write("print(\"[SCRIPT]: \" + line[6:])\n")
     elif(line[0:6] == "IMPORT"):
         convertScript(line[7:])
     elif(line[0:12] == "DEFAULTDELAY"):
         defaultDelay = int(line[13:])
     else:
-        addScriptLine(line)
-def convertScript(file):
-    ...
+        addScriptLine(file, line)
+def convertScript(inFile, outFile):
+    while (line := inFile.readline()):
+        line = line.rstrip()
+        processLine(outFile, line)
 
 def main():
-    inFile = getDuckyFile()
-    outFile = open("code.py", "w")
+    inFilePath = getDuckyFile()
+    inFile = open(inFilePath, "r", encoding='utf-8')
+    outFile = open("code.py", "w", encoding='utf-8')
     
     addImports(outFile)
+    convertScript(inFile, outFile)
+
 
 if __name__ == "__main__":
     main()
