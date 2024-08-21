@@ -17,7 +17,7 @@ Have your bad usb working in 5-10 minutes
 5. Install adafruit package `adafruit-circuitpython-bundle-8/9.x-mpy-YYYYMMDD.zip`, which will allow Pico to identify as HID from [here](https://github.com/adafruit/Adafruit_CircuitPython_Bundle/releases/latest) with `version` corresponding to version of your CircuitPython and extract files outside of Pico
 6. Navigate to `lib` folder of recently extracted package and copy `adafruit_hid` to `lib` folder on your Pico device
 7. Choose ducky script you want from [here](https://github.com/hak5/usbrubberducky-payloads) or create your own, you can inspier yourself by [this](https://docs.hak5.org/hak5-usb-rubber-ducky/ducky-script-basics/hello-world) tutorial and save somewhere, recommended to save in cloned git repository
-8. Now just convert ducky script file into raspberry pi pico python script using tool `main.py` which is located in cloned repository ([this one](https://github.com/julecko/pico-bad-usb/blob/master/main.py)) using command `python main.py -i \<DuckyScriptPath>` for example `python main.py -i payload.ds`
+8. Now just convert ducky script file into raspberry pi pico python script using tool `main.py` which is located in cloned repository ([this one](https://github.com/julecko/pico-bad-usb/blob/master/main.py)) using command `python main.py -i <DuckyScriptPath>` for example `python main.py -i payload.ds`
 9. You should see file `code.py` appear inside cloned repository. Now just copy this file into Pico root. As soon as file is coppied, script will start executing. It executes every time change is made to it and every time Pico connects to computer
 10. Thats it, you should have by now working bad usb made from Pico, amazing
 
