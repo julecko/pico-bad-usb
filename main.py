@@ -28,6 +28,42 @@ duckyCommands = {
     "F8": "Keycode.F8", "F9": "Keycode.F9", "F10": "Keycode.F10", "F11": "Keycode.F11",
     "F12": "Keycode.F12",
 }
+special_chars = {
+    ' ': "Keycode.SPACE",
+    '.': "Keycode.PERIOD",
+    ',': "Keycode.COMMA",
+    '!': "Keycode.EXCLAIM",
+    '@': "Keycode.AT",
+    '#': "Keycode.NUMBER_SIGN",
+    '$': "Keycode.DOLLAR",
+    '%': "Keycode.PERCENT",
+    '^': "Keycode.CARET",
+    '&': "Keycode.AMPERSAND",
+    '*': "Keycode.ASTERISK",
+    '(': "Keycode.LEFT_PAREN",
+    ')': "Keycode.RIGHT_PAREN",
+    '-': "Keycode.MINUS",
+    '=': "Keycode.EQUALS",
+    '[': "Keycode.LEFT_BRACKET",
+    ']': "Keycode.RIGHT_BRACKET",
+    '\\':" Keycode.BACKSLASH",
+    ';': "Keycode.SEMICOLON",
+    '\'':"Keycode.QUOTE",
+    '/': "84",
+    '`': "Keycode.GRAVE_ACCENT",
+    '"': "Keycode.SHIFT, Keycode.QUOTE",
+    "0": "Keycode.ZERO",
+    "1": "Keycode.ONE",
+    "2": "Keycode.TWO",
+    "3": "Keycode.THREE",
+    "4": "Keycode.FOUR",
+    "5": "Keycode.FIVE",
+    "6": "Keycode.SIX",
+    "7": "Keycode.SEVEN",
+    "8": "Keycode.EIGHT",
+    "9": "Keycode.NINE",
+    "|": "Keycode.SHIFT, Keycode.BACKSLASH"
+}
 def getDuckyFile():
     parser = argparse.ArgumentParser(description="Python script which converts ducky files into python scripts for raspberry pi pico")
     parser.add_argument("-i", type=str, help="Input file")
@@ -79,10 +115,17 @@ def processLine(file, line):
 
     if (line[0:3] == "REM" or line == ""):
         return
-    elif (line[0:5] == "DELAY"):
+    elif (line[0:5] == "DELAY" or line[0:5] == "SLEEP"):
         file.write(f"sleep({float(line[6:])/1000})\n")
     elif(line[0:6] == "STRING"):
-        text = editText(line[7:])
+        text = line[7:]
+        for char in text:
+            if char in special_chars:
+                file.write(f"keyboard.press({special_chars[char]})\nkeyboard.release_all()\n")
+            else:
+                file.write(f"keyboard.press(Keycode.{char.upper()})\nkeyboard.release_all()\n")
+    elif (line[0:5] == "WRITE"):
+        text = editText(line[6:])
         file.write(f"layout.write(\"{text}\")\n")
     elif(line[0:5] == "PRINT"):
         file.write("print(\"[SCRIPT]: \" + line[6:])\n")
